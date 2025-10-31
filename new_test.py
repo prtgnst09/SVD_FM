@@ -149,7 +149,7 @@ def objective(trial: optuna.trial.Trial) :
 
 result_dict = {}
 
-search_space = {'embedding_type' : ['SVD'], 'model_type' : ['fm', 'deepfm']}
+search_space = {'embedding_type' : ['original', 'SVD'], 'model_type' : ['fm', 'deepfm']}
 sampler = GridSampler(search_space)
 study = optuna.create_study(sampler=sampler)
 study.optimize(objective, n_trials=4)
