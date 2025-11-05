@@ -166,7 +166,7 @@ if __name__=='__main__':
     args = parser.parse_args("")
     results = {}
     args.model_type = 'deepfm'
-    args.embedding_type = 'SVD'
+    args.embedding_type = 'original'
     data_info = getdata(args)
 
     print('model type is', args.model_type)

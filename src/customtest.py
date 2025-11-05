@@ -65,10 +65,11 @@ class Tester:
 
             if self.args.embedding_type=='original' and self.args.model_type=='fm':
                 emb_x = self.model.embedding(X_cat)
-                result, _, _, _ = self.model.forward(X_cat, X_cont, emb_x)
+                result, _, _, _ = self.model.forward(X_cat, emb_x, X_cont)
 
             elif self.args.embedding_type=='original' and self.args.model_type=='deepfm':
-                result = self.model.forward(X_cat, X_cont)
+                emb_x = self.model.embedding(X_cat)
+                result = self.model.forward(X_cat, emb_x, X_cont)
 
             else:
                 svd_emb = X_cont[:, -self.args.num_eigenvector*2:]
