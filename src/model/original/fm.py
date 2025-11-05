@@ -5,6 +5,7 @@ from src.model.original.layers import FeatureEmbedding, FM_Linear, FM_Interactio
 
 import pytorch_lightning as pl
 from itertools import chain
+from torchviz import make_dot
 
 class FM(pl.LightningModule):
     def __init__(self, args, field_dims):
@@ -32,6 +33,7 @@ class FM(pl.LightningModule):
         # x: batch_size * num_features
         lin_term = self.linear(x=x, x_cont=x_cont)
         inter_term, cont_emb = self.interaction(emb_x, x_cont)
+        
         lin_term_sig = self.sig(lin_term)
         inter_term_sig = self.sig(inter_term)
         outs = torch.cat((lin_term_sig, inter_term_sig), 1)

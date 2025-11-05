@@ -24,3 +24,23 @@ ex) `2593 = tensor([ 0.7755, -1.3483, ... 1.8129,  0.1935])`
 
 ##### FM_Linear
 * `linear_term`
+
+### SVD + FM
+@ src/model/svd/fmsvd.py line:46 (y_pred, _, ...)
+* `x.shape`  
+`torch.Size([4096, 22])`
+* `svd_emb.shape`  
+`torch.Size([4096, 32])`
+* `x_cont.shape`  
+`torch.Size([4096, 0])`
+* `emb_x.shape`  
+`torch.Size([4096, 22, 16])`
+
+### Original+FM
+@ src/model/original/fm.py line:48 (y_pred, _, ...)
+* `x.shape`  
+`torch.Size([4096, 24])`
+* `x_cont.shape`  
+`torch.Size([4096, 0])`
+* `embed_x.shape`  
+`torch.Size([4096, 24, 16])`

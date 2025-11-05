@@ -166,14 +166,14 @@ if __name__=='__main__':
     args = parser.parse_args("")
     results = {}
     args.model_type = 'deepfm'
-    args.embedding_type = 'original'
-    data_info = getdata(args)
+    args.embedding_type = 'SVD'
+    preprocessor = getdata(args)
 
     print('model type is', args.model_type)
     print('embedding type is', args.embedding_type)
-    model, timeee = trainer(args, data_info)
+    model, timeee = trainer(args, preprocessor)
     test_time = time.time()
-    tester = Tester(args, model, data_info)
+    tester = Tester(args, model, preprocessor)
 
     result = tester.test()
 

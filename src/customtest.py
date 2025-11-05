@@ -63,13 +63,13 @@ class Tester:
             X_cat = torch.tensor(cur_user_df[self.cat_cols].values, dtype=torch.int64)
             X_cont = torch.tensor(cur_user_df[self.cont_cols].values, dtype=torch.float32)
 
-            if self.args.embedding_type=='original' and self.args.model_type=='fm':
+            if self.args.embedding_type=='original':
                 emb_x = self.model.embedding(X_cat)
                 result, _, _, _ = self.model.forward(X_cat, emb_x, X_cont)
 
-            elif self.args.embedding_type=='original' and self.args.model_type=='deepfm':
-                emb_x = self.model.embedding(X_cat)
-                result = self.model.forward(X_cat, emb_x, X_cont)
+            # elif self.args.embedding_type=='original' and self.args.model_type=='deepfm':
+            #     emb_x = self.model.embedding(X_cat)
+            #     result = self.model.forward(X_cat, emb_x, X_cont)
 
             else:
                 svd_emb = X_cont[:, -self.args.num_eigenvector*2:]

@@ -42,21 +42,20 @@ class DeepFM(pl.LightningModule):
         emb_x = emb_x.view(-1, feature_number * self.args.emb_dim)
 
         new_x = emb_x
-        deep_part = self.mlp(new_x)
+        mlp_x = self.mlp(new_x)
 
-        lin_term = self.sig(lin_term)
-        inter_term = self.sig(inter_term)
-        deep_part = self.sig(deep_part)
-        outs = torch.cat((lin_term,inter_term), 1)
-        outs = torch.cat((outs,deep_part), 1)
+        lin_term_sig = self.sig(lin_term)
+        inter_term_sig = self.sig(inter_term)
+        mlp_term_sig = self.sig(mlp_x)
+        outs = torch.cat((lin_term_sig, inter_term_sig, mlp_term_sig), dim=1)
         y_pred = self.lastlinear(outs).squeeze(1)
 
-        return y_pred
+        return y_pred, cont_emb, lin_term, inter_term
 
     def training_step(self, batch, batch_idx):
         x, x_cont, y, c_values = batch
         embed_x = self.embedding(x)
-        y_pred = self.forward(x, embed_x, x_cont)
+        y_pred, _, _, _ = self.forward(x, embed_x, x_cont)
         loss_y = self.loss(y_pred, y,c_values)
         self.log('train_loss', loss_y, on_step=True, on_epoch=True, prog_bar=True, logger=True)
         return loss_y
