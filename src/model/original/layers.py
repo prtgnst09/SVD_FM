@@ -71,8 +71,8 @@ class FM_Interaction(nn.Module):
     def forward(self, x, x_cont):
         x_comb = x
         x_cont = x_cont.unsqueeze(1)
-        linear = torch.sum(x_comb, 1)**2
-        interaction = torch.sum(x_comb**2, 1)
+        linear = torch.sum(x_comb, dim=1)**2
+        interaction = torch.sum(x_comb**2, dim=1)
         if self.args.cont_dims!=0:
             cont_linear = torch.sum(torch.matmul(x_cont, self.v)**2, dim=1)
             linear = torch.cat((linear, cont_linear), 1)

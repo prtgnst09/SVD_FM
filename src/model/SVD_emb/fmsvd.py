@@ -29,7 +29,7 @@ class FMSVD(pl.LightningModule):
     
     def forward(self, x, emb_x, svd_emb, x_cont):
         # x: batch_size * num_features
-        lin_term = self.linear(x=x, emb_x=svd_emb, x_cont=x_cont)
+        lin_term = self.linear(x=x, svd_emb=svd_emb, x_cont=x_cont)
         inter_term, cont_emb = self.interaction(emb_x=emb_x, svd_emb=svd_emb, x_cont=x_cont)
         # to normalize lin_term and inter_term to be in the same scale
         # so that the weights can be comparable

@@ -67,7 +67,7 @@ class DeepFMSVD(pl.LightningModule):
         return y_pred
 
     def training_step(self, batch):
-        x, svd_emb, ui, x_cont, y, c_values = batch
+        x, svd_emb, x_cont, y, c_values = batch
         embed_x = self.embedding(x)
         y_pred = self.forward(x,embed_x, svd_emb, x_cont)
         loss_y = self.loss(y_pred, y, c_values)

@@ -27,7 +27,7 @@ class FM(pl.LightningModule):
         loss_y = weighted_bce.mean()
         return loss_y 
     
-    def forward(self, x, x_cont, emb_x):
+    def forward(self, x, emb_x, x_cont):
         # FM part loss with interaction terms
         # x: batch_size * num_features
         lin_term = self.linear(x=x, x_cont=x_cont)
@@ -43,7 +43,7 @@ class FM(pl.LightningModule):
     def training_step(self, batch, batch_idx):
         x, x_cont, y, c_values = batch
         embed_x = self.embedding(x)
-        y_pred, _, _, _ = self.forward(x, x_cont, embed_x)
+        y_pred, _, _, _ = self.forward(x, embed_x, x_cont)
         loss_y = self.loss(y_pred, y, c_values)
         self.log('train_loss', loss_y, on_step=True, on_epoch=True, prog_bar=True, logger=True)
         return loss_y

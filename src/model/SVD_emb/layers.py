@@ -48,15 +48,15 @@ class FM_Linear(nn.Module):
         self.offsets = np.array((0, *np.cumsum(field_dims)[:-1]), dtype=np.int64)
         self.args = args
             
-    def forward(self, x, emb_x, x_cont):
+    def forward(self, x, svd_emb, x_cont):
         # input x: batch_size * num_features
         x = x + x.new_tensor(self.offsets).unsqueeze(0)
         linear_term = self.linear(x)
         cont_linear = torch.matmul(x_cont, self.w).reshape(-1, 1)
 
         # added because of svd_embed
-        user_emb = emb_x[:, 0].unsqueeze(1).unsqueeze(1)
-        item_emb = emb_x[:, self.args.num_eigenvector].unsqueeze(1).unsqueeze(1)
+        user_emb = svd_emb[:, 0].unsqueeze(1).unsqueeze(1)
+        item_emb = svd_emb[:, self.args.num_eigenvector].unsqueeze(1).unsqueeze(1)
         nemb_x = torch.cat((user_emb, item_emb), 1)
         linear_term = torch.cat((linear_term, nemb_x), 1)
 
