@@ -9,7 +9,6 @@ from src.model.SVD_emb.layers import FeatureEmbedding, FeatureEmbedding, FM_Line
 #from src.util.scaler import StandardScaler
 
 
-
 class DeepFMSVD(pl.LightningModule):
     def __init__(self, args,field_dims):
         super(DeepFMSVD, self).__init__()

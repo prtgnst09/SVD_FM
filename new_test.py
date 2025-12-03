@@ -47,7 +47,7 @@ parser.add_argument('--cont_dims', type=int, default=0,            help='continu
 parser.add_argument('--shopping_file_num', type=int, default=147,  help='name of shopping file choose from 147 or  148 or 149')
 
 parser.add_argument('--datatype', type=str, default="ml100k",           help='ml100k or ml1m or shopping or goodbook or frappe')
-parser.add_argument('--isuniform', type=bool, default=False,             help='true if uniform false if not')
+parser.add_argument('--isuniform', type=bool, default=False,            help='true if uniform false if not')
 parser.add_argument('--embedding_type', type=str, default='original',   help='SVD or NMF or original')
 parser.add_argument('--model_type', type=str, default='fm',             help='fm or deepfm')
 
@@ -122,62 +122,64 @@ def trainer(args, data: Preprocessor):
     return model, end-start
 
 # This is code for multiple experiments
-# def objective(trial: optuna.trial.Trial) :
-#     args = parser.parse_args("")
-#     args.embedding_type = trial.suggest_categorical('embedding_type', ['original', 'SVD'])
-#     args.model_type = trial.suggest_categorical('model_type', ['fm', 'deepfm'])
+def objective(trial: optuna.trial.Trial) :
+    args = parser.parse_args("")
+    args.embedding_type = trial.suggest_categorical('embedding_type', ['original', 'SVD'])
+    args.model_type = trial.suggest_categorical('model_type', ['fm', 'deepfm'])
 
-#     model_desc = args.embedding_type + args.model_type
-#     print("model is :", model_desc)
-#     seeds = [42]
-#     scores = []
-#     for seed in seeds:
-#         setseed(seed=seed)
-#         data_info = getdata(args)
+    model_desc = args.embedding_type + args.model_type
+    print("model is :", model_desc)
+    seeds = [42]
+    scores = []
+    for seed in seeds:
+        setseed(seed=seed)
+        data_info = getdata(args)
 
-#         model, timeee = trainer(args, data_info)
-#         tester = Tester(args, model, data_info)
+        model, timeee = trainer(args, data_info)
+        tester = Tester(args, model, data_info)
 
-#         result = tester.test()
+        result = tester.test()
 
-#         global result_dict
-#         result_dict = result_checker(result_dict, result, model_desc)
-#         scores.append(result['precision'])
+        global result_dict
+        result_dict = result_checker(result_dict, result, model_desc)
+        scores.append(result['precision'])
 
-#     return result['precision']
+    return result['precision']
 
-# result_dict = {}
+result_dict = {}
 
-# search_space = {'embedding_type' : ['original', 'SVD'], 'model_type' : ['fm', 'deepfm']}
-# sampler = GridSampler(search_space)
-# study = optuna.create_study(sampler=sampler)
-# study.optimize(objective, n_trials=4)
+search_space = {'embedding_type' : ['original', 'SVD'], 'model_type' : ['fm', 'deepfm']}
+sampler = GridSampler(search_space)
+study = optuna.create_study(sampler=sampler)
+study.optimize(objective, n_trials=4)
 
-# for models in result_dict.keys():
-#     print(models)
-#     print(result_dict[models]['precision'])
+for models in result_dict.keys():
+    print(models)
+    print(result_dict[models]['precision'])
+    print(result_dict[models]['time'])
 
 # with open('results/sparseSVD_deepfm.pickle', mode='wb') as f:
 #     pickle.dump(result_dict, f)
 
 # This is for one-time run
-if __name__=='__main__':
-    setseed(seed=42)
-    args = parser.parse_args("")
-    results = {}
-    args.model_type = 'deepfm'
-    args.embedding_type = 'SVD'
-    preprocessor = getdata(args)
+# if __name__=='__main__':
+#     setseed(seed=42)
+#     args = parser.parse_args("")
+#     results = {}
+#     args.model_type = 'deepfm'
+#     args.embedding_type = 'SVD'
+#     # args.datatype = 'ml1m'
+#     preprocessor = getdata(args)
 
-    print('model type is', args.model_type)
-    print('embedding type is', args.embedding_type)
-    model, timeee = trainer(args, preprocessor)
-    test_time = time.time()
-    tester = Tester(args, model, preprocessor)
+#     print('model type is', args.model_type)
+#     print('embedding type is', args.embedding_type)
+#     model, timeee = trainer(args, preprocessor)
+#     test_time = time.time()
+#     tester = Tester(args, model, preprocessor)
 
-    result = tester.test()
+#     result = tester.test()
 
-    end_test_time = time.time()
-    results[args.embedding_type + args.model_type] = result
-    print(results)
-    print("time :", timeee)
+#     end_test_time = time.time()
+#     results[args.embedding_type + args.model_type] = result
+#     print(results)
+#     print("time :", timeee)
