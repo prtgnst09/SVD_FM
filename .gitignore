@@ -2,5 +2,5 @@ lightning_logs/
 *.pyc
 dataset/
 n_results/*
-.venv/
+.svd_env/
 .vscode/
