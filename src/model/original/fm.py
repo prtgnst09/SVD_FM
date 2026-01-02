@@ -5,6 +5,7 @@ from src.model.original.layers import FeatureEmbedding, FM_Linear, FM_Interactio
 
 import pytorch_lightning as pl
 from itertools import chain
+from torchviz import make_dot
 
 class FM(pl.LightningModule):
     def __init__(self, args, field_dims):
@@ -27,23 +28,24 @@ class FM(pl.LightningModule):
         loss_y = weighted_bce.mean()
         return loss_y 
     
-    def forward(self, x, x_cont, emb_x):
+    def forward(self, x, emb_x, x_cont):
         # FM part loss with interaction terms
         # x: batch_size * num_features
         lin_term = self.linear(x=x, x_cont=x_cont)
         inter_term, cont_emb = self.interaction(emb_x, x_cont)
+        
         lin_term_sig = self.sig(lin_term)
         inter_term_sig = self.sig(inter_term)
         outs = torch.cat((lin_term_sig, inter_term_sig), 1)
-        x = self.last_linear(outs)
-        x = x.squeeze(1)
+        y_pred = self.last_linear(outs)
+        y_pred = y_pred.squeeze(1)
             
-        return x, cont_emb, lin_term, inter_term
+        return y_pred, cont_emb, lin_term, inter_term
     
     def training_step(self, batch, batch_idx):
         x, x_cont, y, c_values = batch
         embed_x = self.embedding(x)
-        y_pred, _, _, _ = self.forward(x, x_cont, embed_x)
+        y_pred, _, _, _ = self.forward(x, embed_x, x_cont)
         loss_y = self.loss(y_pred, y, c_values)
         self.log('train_loss', loss_y, on_step=True, on_epoch=True, prog_bar=True, logger=True)
         return loss_y

@@ -23,7 +23,9 @@ class MLP(nn.Module):
         return x
 
 class FeatureEmbedding(nn.Module):
-
+    """
+    dtype==torch.int64인 x의 각 integer를 16차원의 embedding vector로 변환
+    """
     def __init__(self, args, field_dims):
         super(FeatureEmbedding, self).__init__()
         self.embedding = nn.Embedding(sum(field_dims+1), args.emb_dim)
@@ -35,9 +37,13 @@ class FeatureEmbedding(nn.Module):
         x = self.embedding(x)
         return x
 
-
 class FM_Linear(nn.Module):
-
+    """
+    dtype==torch.int64인 x의 각 integer를 1차원의 embedding vector로 변환
+    같은 데이터 행(row)별 합을 구한 후 cont_linear과 합침
+    i.e. (N개의 row, k개의 column이 있는 x가 있을 때)
+         (N, k) -> (N, k, 1) (embedding 추가) -> (N, 1) 
+    """
     def __init__(self, args, field_dims):
         super(FM_Linear, self).__init__()
         self.linear = torch.nn.Embedding(sum(field_dims)+1, 1)
@@ -51,8 +57,8 @@ class FM_Linear(nn.Module):
         linear_term = self.linear(x)
         cont_linear = torch.matmul(x_cont, self.w).reshape(-1, 1) # add continuous features
         
-        x = torch.sum(linear_term, dim=1) + self.bias
-        x = x + cont_linear 
+        x = torch.sum(linear_term, dim=1) + self.bias # 각 row마다 합을 구함 
+        x = x + cont_linear
         return x
 
 class FM_Interaction(nn.Module):
@@ -65,8 +71,8 @@ class FM_Interaction(nn.Module):
     def forward(self, x, x_cont):
         x_comb = x
         x_cont = x_cont.unsqueeze(1)
-        linear = torch.sum(x_comb, 1)**2
-        interaction = torch.sum(x_comb**2, 1)
+        linear = torch.sum(x_comb, dim=1)**2
+        interaction = torch.sum(x_comb**2, dim=1)
         if self.args.cont_dims!=0:
             cont_linear = torch.sum(torch.matmul(x_cont, self.v)**2, dim=1)
             linear = torch.cat((linear, cont_linear), 1)

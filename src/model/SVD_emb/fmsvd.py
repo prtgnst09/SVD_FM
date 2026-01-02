@@ -29,7 +29,7 @@ class FMSVD(pl.LightningModule):
     
     def forward(self, x, emb_x, svd_emb, x_cont):
         # x: batch_size * num_features
-        lin_term = self.linear(x=x, emb_x=svd_emb, x_cont=x_cont)
+        lin_term = self.linear(x=x, svd_emb=svd_emb, x_cont=x_cont)
         inter_term, cont_emb = self.interaction(emb_x=emb_x, svd_emb=svd_emb, x_cont=x_cont)
         # to normalize lin_term and inter_term to be in the same scale
         # so that the weights can be comparable
@@ -41,9 +41,9 @@ class FMSVD(pl.LightningModule):
         return x, cont_emb, lin_term, inter_term
 
     def training_step(self, batch, batch_idx):
-        x, svd_emb, ui, x_cont, y, c_values = batch
-        embed_x = self.embedding(x)
-        y_pred, _, _, _ = self.forward(x=x, emb_x=embed_x, svd_emb=svd_emb, x_cont=x_cont)
+        x, svd_emb, x_cont, y, c_values = batch
+        emb_x = self.embedding(x)
+        y_pred, _, _, _ = self.forward(x=x, emb_x=emb_x, svd_emb=svd_emb, x_cont=x_cont)
         loss_y = self.loss(y_pred, y, c_values)
         self.log('train_loss', loss_y, on_step=True, on_epoch=True, prog_bar=True, logger=True)
         return loss_y

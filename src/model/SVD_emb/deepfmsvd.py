@@ -9,7 +9,6 @@ from src.model.SVD_emb.layers import FeatureEmbedding, FeatureEmbedding, FM_Line
 #from src.util.scaler import StandardScaler
 
 
-
 class DeepFMSVD(pl.LightningModule):
     def __init__(self, args,field_dims):
         super(DeepFMSVD, self).__init__()
@@ -39,37 +38,36 @@ class DeepFMSVD(pl.LightningModule):
         return loss_y
     
 
-    def forward(self, x,embed_x,svd_emb,x_cont):
+    def forward(self, x, embed_x, svd_emb, x_cont):
         # FM part, here, x_hat means another arbritary input of data, for combining the results. 
-        fm_part, cont_emb, lin_term, inter_term=self.fm(x, embed_x, svd_emb, x_cont)
+        _, cont_emb, lin_term, inter_term = self.fm(x, embed_x, svd_emb, x_cont)
         user_emb = svd_emb[:, :self.args.num_eigenvector]
         item_emb = svd_emb[:, self.args.num_eigenvector:]
         
-        embed_x = torch.cat((embed_x,cont_emb), 1)
+        embed_x = torch.cat((embed_x, cont_emb), 1)
         feature_number = embed_x.shape[1]
         
         # to make embed_x to batch_size * (num_features*embedding_dim)
         embed_x = embed_x.reshape(-1, feature_number*self.args.emb_dim)
         
-        new_x = torch.cat((embed_x, user_emb),1)
-        new_x = torch.cat((new_x, item_emb),1)
+        new_x = torch.cat((embed_x, user_emb, item_emb),1)
+        # new_x = torch.cat((new_x, item_emb),1)
         deep_part = self.mlp(new_x)
         
         # Deep part
-        lin_term = self.sig(lin_term)
-        inter_term = self.sig(inter_term)
-        deep_part = self.sig(deep_part)
+        lin_term_sig = self.sig(lin_term)
+        inter_term_sig = self.sig(inter_term)
+        deep_part_sig = self.sig(deep_part)
 
-        outs = torch.cat((lin_term, inter_term ), 1)
-        outs = torch.cat((outs, deep_part), 1)
+        outs = torch.cat((lin_term_sig, inter_term_sig, deep_part_sig), 1)
         y_pred = self.lastlinear(outs).squeeze(1)
 
         return y_pred
 
     def training_step(self, batch):
-        x, svd_emb, ui, x_cont, y, c_values = batch
+        x, svd_emb, x_cont, y, c_values = batch
         embed_x = self.embedding(x)
-        y_pred = self.forward(x,embed_x, svd_emb, x_cont)
+        y_pred = self.forward(x, embed_x, svd_emb, x_cont)
         loss_y = self.loss(y_pred, y, c_values)
         self.log('train_loss', loss_y, on_step=True, on_epoch=True, prog_bar=True, logger=True)
         return loss_y
