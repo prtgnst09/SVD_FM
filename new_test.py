@@ -164,8 +164,9 @@ if __name__=='__main__':
     setseed(seed=42)
     args = parser.parse_args("")
     results = {}
-    args.embedding_type = 'SVD'
-    args.model_type = 'deepfm'
+    args.datatype = 'goodbook'
+    args.embedding_type = 'original'
+    args.model_type = 'fm'
     preprocessor = getdata(args)
 
     print('model type is', args.model_type)
