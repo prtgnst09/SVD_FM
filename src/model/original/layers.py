@@ -71,15 +71,28 @@ class FM_Interaction(nn.Module):
     def forward(self, x, x_cont):
         x_comb = x
         x_cont = x_cont.unsqueeze(1)
+
+        cont = torch.matmul(x_cont, self.v)
+        x_comb = torch.cat((x_comb, cont), 1)
+
         linear = torch.sum(x_comb, dim=1)**2
         interaction = torch.sum(x_comb**2, dim=1)
-        if self.args.cont_dims!=0:
-            cont_linear = torch.sum(torch.matmul(x_cont, self.v)**2, dim=1)
-            linear = torch.cat((linear, cont_linear), 1)
-            cont_interaction = torch.sum(torch.matmul(x_cont**2, self.v**2), 1, keepdim=True)
-            interaction = torch.cat((interaction, cont_interaction.squeeze(1)), 1)
-
+        
         interaction = 0.5*torch.sum(linear-interaction, 1, keepdim=True)
         cont_emb = self.v.unsqueeze(0).repeat(x_comb.shape[0], 1, 1)
-
+        
         return interaction, cont_emb
+        # x_comb = x
+        # x_cont = x_cont.unsqueeze(1)
+        # linear = torch.sum(x_comb, dim=1)**2
+        # interaction = torch.sum(x_comb**2, dim=1)
+        # if self.args.cont_dims!=0:
+        #     cont_linear = torch.sum(torch.matmul(x_cont, self.v)**2, dim=1)
+        #     linear = torch.cat((linear, cont_linear), 1)
+        #     cont_interaction = torch.sum(torch.matmul(x_cont**2, self.v**2), 1, keepdim=True)
+        #     interaction = torch.cat((interaction, cont_interaction.squeeze(1)), 1)
+
+        # interaction = 0.5*torch.sum(linear-interaction, 1, keepdim=True)
+        # cont_emb = self.v.unsqueeze(0).repeat(x_comb.shape[0], 1, 1)
+
+        # return interaction, cont_emb

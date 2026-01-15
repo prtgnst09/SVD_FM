@@ -165,7 +165,7 @@ if __name__=='__main__':
     args = parser.parse_args("")
     results = {}
     args.datatype = 'goodbook'
-    args.embedding_type = 'original'
+    args.embedding_type = 'SVD'
     args.model_type = 'fm'
     preprocessor = getdata(args)
 
