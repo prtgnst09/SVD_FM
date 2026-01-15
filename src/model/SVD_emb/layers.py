@@ -77,7 +77,6 @@ class FM_Interaction(nn.Module):
         item_emb = svd_emb[:, self.args.num_eigenvector:].unsqueeze(1)
         x_comb = torch.cat((emb_x, user_emb, item_emb), 1)
         x_cont = x_cont.unsqueeze(1)
-        # x_comb = torch.cat((x_comb, item_emb), 1)
 
         cont = torch.matmul(x_cont, self.v)
         x_comb = torch.cat((x_comb, cont), 1)
