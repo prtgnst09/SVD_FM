@@ -1,5 +1,6 @@
 import argparse
 import time
+from src.util.logger import set_logger
 
 import pytorch_lightning as pl
 from torch.utils.data import DataLoader
@@ -22,6 +23,8 @@ import numpy as np
 import random
 import torch
 
+from multiprocessing import current_process
+import os
 
 # 인자 전달
 parser = argparse.ArgumentParser()
@@ -31,7 +34,7 @@ parser.add_argument('--lr', type=float, default=0.001,             help='Learnin
 parser.add_argument('--weight_decay', type=float, default=0.00001, help='Weight decay(for both FM and autoencoder)')
 parser.add_argument('--num_epochs_training', type=int, default=100,help='Number of epochs')
 parser.add_argument('--batch_size', type=int, default=4096,        help='Batch size')
-parser.add_argument('--num_workers', type=int, default=10,         help='Number of workers for dataloader')
+parser.add_argument('--num_workers', type=int, default=0,         help='Number of workers for dataloader')
 parser.add_argument('--num_deep_layers', type=int, default=2,      help='Number of deep layers')
 parser.add_argument('--deep_layer_size', type=int, default=128,    help='Size of deep layers')
 parser.add_argument('--seed', type=int, default=42)
@@ -50,8 +53,6 @@ parser.add_argument('--datatype', type=str, default="ml100k",           help='ml
 parser.add_argument('--isuniform', type=bool, default=False,            help='true if uniform false if not')
 parser.add_argument('--embedding_type', type=str, default='original',   help='SVD or NMF or original')
 parser.add_argument('--model_type', type=str, default='fm',             help='fm or deepfm')
-
-args = parser.parse_args("")
 
 # seed 값 고정
 def setseed(seed: int):
@@ -84,7 +85,6 @@ def getdata(args):
 
 
 def trainer(args, data: Preprocessor):
-
     cats, conts = data.cat_train_df, data.cont_train_df
     target, c = data.target, data.c
     field_dims = data.field_dims
@@ -113,7 +113,7 @@ def trainer(args, data: Preprocessor):
     else:
         raise NotImplementedError
     
-    dataloader = DataLoader(Dataset, batch_size=args.batch_size, shuffle=True, num_workers=20)
+    dataloader = DataLoader(Dataset, batch_size=args.batch_size, shuffle=True, num_workers=args.num_workers)
     
     start = time.time()
     trainer = pl.Trainer(max_epochs=args.num_epochs_training, enable_checkpointing=False, logger=False)
@@ -162,15 +162,17 @@ def trainer(args, data: Preprocessor):
 # This is for one-time run
 if __name__=='__main__':
     setseed(seed=42)
+    print(f"PID: {os.getpid()}, Rank: {os.environ.get('RANK', 'N/A')}")
+    logger = set_logger()
     args = parser.parse_args("")
+    
     results = {}
-    args.datatype = 'goodbook'
     args.embedding_type = 'SVD'
     args.model_type = 'fm'
     preprocessor = getdata(args)
 
-    print('model type is', args.model_type)
-    print('embedding type is', args.embedding_type)
+    logger.info('model type is %s', args.model_type)
+    logger.info('embedding type is %s', args.embedding_type)
     model, timeee = trainer(args, preprocessor)
     test_time = time.time()
     tester = Tester(args, model, preprocessor)
@@ -179,5 +181,5 @@ if __name__=='__main__':
 
     end_test_time = time.time()
     results[args.embedding_type + args.model_type] = result
-    print(results)
-    print("time :", timeee)
+    logger.info(results)
+    logger.info("time : %s", timeee)
