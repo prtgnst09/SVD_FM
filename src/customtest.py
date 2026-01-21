@@ -1,9 +1,11 @@
 import pandas as pd
 import numpy as np
-# from src.data_util.fm_preprocess import FM_Preprocessing
 from src.util.preprocessor import Preprocessor
 import tqdm
 import torch
+import logging
+
+logger = logging.getLogger("svdfm_test")
 
 class Tester:
 
@@ -53,7 +55,8 @@ class Tester:
         user_list = self.le_dict['user_id'].classes_
         self.model.eval()
         precisions, recalls, hit_rates, reciprocal_ranks, dcgs = [], [], [], [], []
-
+        
+        logger.info("Starting testing...")
         for customerid in tqdm.tqdm(user_list[:]):
 
             if customerid not in self.test_org['user_id'].unique():
@@ -92,11 +95,9 @@ class Tester:
             hit_rates.append(self.get_hit_rate(pred, real))
             reciprocal_ranks.append(self.get_reciprocal_rank(pred, real))
             dcgs.append(self.get_dcg(pred, real))
+        
+        logger.info("Completed testing")
 
-        print("average precision: ",np.mean(precisions))
-        # total user number and total item number
-        # print("total user number: ",len(user_list))
-        # print("total item number: ",len(self.train_df['item_id'].unique()))
         metrics = {'precision' : np.mean(precisions), 
                    'recall' : np.mean(recalls),
                    'hit_rate' : np.mean(hit_rates),

@@ -2,7 +2,9 @@ from copy import deepcopy
 import numpy as np
 import pandas as pd
 import tqdm
+import logging
 
+logger = logging.getLogger("svdfm_test")
 class NegativeSampler:
     #  takes input of original dataframe and movie info
     #  make a function that returns negative sampled data
@@ -46,7 +48,7 @@ class NegativeSampler:
         df['user_frequency'] = df.groupby('user_id')['user_id'].transform('count')
         df['item_frequency'] = df.groupby('item_id')['item_id'].transform('count')
 
-        print("Negative Sampling Started")
+        logger.info("Negative Sampling Started")
 
         for customer in tqdm.tqdm(unique_customers[:]):
 
@@ -92,5 +94,5 @@ class NegativeSampler:
         # original과 not_purchased_df 합쳐서 return
         to_return = pd.concat([self.original_df, not_purchased_df], axis=0, ignore_index=True)
         to_return.drop(['user_frequency','item_frequency'], axis=1, inplace=True)
-        print("Negative Sampling Finished")
+        logger.info("Negative Sampling Finished")
         return to_return

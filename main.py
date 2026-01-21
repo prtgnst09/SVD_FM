@@ -17,14 +17,11 @@ from src.customtest import Tester
 
 from src.util.preprocessor import Preprocessor
 
-import optuna
 from optuna.samplers import GridSampler
 import numpy as np
 import random
 import torch
 
-from multiprocessing import current_process
-import os
 
 # 인자 전달
 parser = argparse.ArgumentParser()
@@ -34,7 +31,7 @@ parser.add_argument('--lr', type=float, default=0.001,             help='Learnin
 parser.add_argument('--weight_decay', type=float, default=0.00001, help='Weight decay(for both FM and autoencoder)')
 parser.add_argument('--num_epochs_training', type=int, default=100,help='Number of epochs')
 parser.add_argument('--batch_size', type=int, default=4096,        help='Batch size')
-parser.add_argument('--num_workers', type=int, default=0,         help='Number of workers for dataloader')
+parser.add_argument('--num_workers', type=int, default=10,          help='Number of workers for dataloader')
 parser.add_argument('--num_deep_layers', type=int, default=2,      help='Number of deep layers')
 parser.add_argument('--deep_layer_size', type=int, default=128,    help='Size of deep layers')
 parser.add_argument('--seed', type=int, default=42)
@@ -116,7 +113,12 @@ def trainer(args, data: Preprocessor):
     dataloader = DataLoader(Dataset, batch_size=args.batch_size, shuffle=True, num_workers=args.num_workers)
     
     start = time.time()
-    trainer = pl.Trainer(max_epochs=args.num_epochs_training, enable_checkpointing=False, logger=False)
+    trainer = pl.Trainer(
+        max_epochs=args.num_epochs_training, 
+        enable_checkpointing=False, 
+        devices=1,
+        strategy='single_device',
+        logger=False)
     trainer.fit(model, dataloader)
     end = time.time()
     return model, end-start
@@ -162,7 +164,7 @@ def trainer(args, data: Preprocessor):
 # This is for one-time run
 if __name__=='__main__':
     setseed(seed=42)
-    print(f"PID: {os.getpid()}, Rank: {os.environ.get('RANK', 'N/A')}")
+    torch.set_float32_matmul_precision('high')
     logger = set_logger()
     args = parser.parse_args("")
     
