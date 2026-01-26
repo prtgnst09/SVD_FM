@@ -117,8 +117,8 @@ def trainer(args, data: Preprocessor):
         max_epochs=args.num_epochs_training, 
         enable_checkpointing=False, 
         devices=1,
-        strategy='single_device',
-        logger=False)
+        logger=False,
+        strategy='auto')
     trainer.fit(model, dataloader)
     end = time.time()
     return model, end-start
@@ -164,13 +164,13 @@ def trainer(args, data: Preprocessor):
 # This is for one-time run
 if __name__=='__main__':
     setseed(seed=42)
-    torch.set_float32_matmul_precision('high')
+    torch.set_float32_matmul_precision('highest')
     logger = set_logger()
     args = parser.parse_args("")
     
     results = {}
-    args.embedding_type = 'SVD'
-    args.model_type = 'fm'
+    args.embedding_type = 'original'
+    args.model_type = 'deepfm'
     preprocessor = getdata(args)
 
     logger.info('model type is %s', args.model_type)

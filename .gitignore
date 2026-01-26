@@ -1,6 +1,6 @@
-lightning_logs/
+logs/
 *.pyc
 dataset/
 n_results/*
-.svd_env/
+.svd_env/*
 .vscode/
