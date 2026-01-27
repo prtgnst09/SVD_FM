@@ -56,7 +56,7 @@ class Tester:
         self.model.eval()
         precisions, recalls, hit_rates, reciprocal_ranks, dcgs = [], [], [], [], []
         
-        logger.info("Starting testing...")
+        logger.info("Custom Test Started")
         for customerid in tqdm.tqdm(user_list[:]):
 
             if customerid not in self.test_org['user_id'].unique():
@@ -96,7 +96,7 @@ class Tester:
             reciprocal_ranks.append(self.get_reciprocal_rank(pred, real))
             dcgs.append(self.get_dcg(pred, real))
         
-        logger.info("Completed testing")
+        logger.info("Custom Test Finished")
 
         metrics = {'precision' : np.mean(precisions), 
                    'recall' : np.mean(recalls),

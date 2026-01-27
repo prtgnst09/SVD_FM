@@ -1,9 +1,13 @@
 import argparse
 import time
-from src.util.logger import set_logger
+import random
+from numpy.random import seed as np_seed
+from optuna.samplers import GridSampler
 
 import pytorch_lightning as pl
 from torch.utils.data import DataLoader
+from torch import manual_seed, set_float32_matmul_precision
+from torch.cuda import manual_seed_all
 
 from src.data_util.dataloader_custom import CustomDataLoader
 from src.data_util.dataloader_SVD import SVDDataloader
@@ -17,11 +21,7 @@ from src.customtest import Tester
 
 from src.util.preprocessor import Preprocessor
 
-from optuna.samplers import GridSampler
-import numpy as np
-import random
-import torch
-
+from logger import set_logger
 
 # 인자 전달
 parser = argparse.ArgumentParser()
@@ -31,7 +31,7 @@ parser.add_argument('--lr', type=float, default=0.001,             help='Learnin
 parser.add_argument('--weight_decay', type=float, default=0.00001, help='Weight decay(for both FM and autoencoder)')
 parser.add_argument('--num_epochs_training', type=int, default=100,help='Number of epochs')
 parser.add_argument('--batch_size', type=int, default=4096,        help='Batch size')
-parser.add_argument('--num_workers', type=int, default=10,          help='Number of workers for dataloader')
+parser.add_argument('--num_workers', type=int, default=10,         help='Number of workers for dataloader')
 parser.add_argument('--num_deep_layers', type=int, default=2,      help='Number of deep layers')
 parser.add_argument('--deep_layer_size', type=int, default=128,    help='Size of deep layers')
 parser.add_argument('--seed', type=int, default=42)
@@ -50,13 +50,14 @@ parser.add_argument('--datatype', type=str, default="ml100k",           help='ml
 parser.add_argument('--isuniform', type=bool, default=False,            help='true if uniform false if not')
 parser.add_argument('--embedding_type', type=str, default='original',   help='SVD or NMF or original')
 parser.add_argument('--model_type', type=str, default='fm',             help='fm or deepfm')
+parser.add_argument('--original_interaction_ver', type=int, default=1,  help='old version is 1, new version is 2')
 
 # seed 값 고정
 def setseed(seed: int):
     random.seed(seed)
-    np.random.seed(seed)
-    torch.manual_seed(seed)    
-    torch.cuda.manual_seed_all(seed)
+    np_seed(seed)
+    manual_seed(seed)    
+    manual_seed_all(seed)
 
 def result_checker(result_dict: dict, result: dict, model_desc: str):
     try:
@@ -85,7 +86,15 @@ def trainer(args, data: Preprocessor):
     cats, conts = data.cat_train_df, data.cont_train_df
     target, c = data.target, data.c
     field_dims = data.field_dims
-
+    
+    logger.space()
+    logger.info("========= Data Description =========")
+    logger.info(f"data : {args.datatype}")
+    logger.info(f"number of categorical features: {cats.shape[1]}")
+    logger.info(f"number of continuous features: {conts.shape[1]}")
+    logger.info("====================================")
+    logger.space()
+    
     # I know this is a bit inefficient to create all four classes for model, but I did this for simplicity
     if args.model_type=='fm' and args.embedding_type=='original':
         model = FM(args, field_dims)
@@ -115,8 +124,9 @@ def trainer(args, data: Preprocessor):
     start = time.time()
     trainer = pl.Trainer(
         max_epochs=args.num_epochs_training, 
-        enable_checkpointing=False, 
-        devices=1,
+        enable_checkpointing=False,
+        accelerator='gpu',
+        devices=[0],
         logger=False,
         strategy='auto')
     trainer.fit(model, dataloader)
@@ -164,17 +174,17 @@ def trainer(args, data: Preprocessor):
 # This is for one-time run
 if __name__=='__main__':
     setseed(seed=42)
-    torch.set_float32_matmul_precision('highest')
+    set_float32_matmul_precision('highest')
     logger = set_logger()
     args = parser.parse_args("")
     
     results = {}
-    args.embedding_type = 'original'
-    args.model_type = 'deepfm'
+    args.datatype = 'ml100k'
+    args.embedding_type = 'SVD'
+    args.model_type = 'fm'
     preprocessor = getdata(args)
 
-    logger.info('model type is %s', args.model_type)
-    logger.info('embedding type is %s', args.embedding_type)
+    logger.info(f"model : {args.embedding_type + args.model_type}")
     model, timeee = trainer(args, preprocessor)
     test_time = time.time()
     tester = Tester(args, model, preprocessor)
@@ -182,6 +192,11 @@ if __name__=='__main__':
     result = tester.test()
 
     end_test_time = time.time()
-    results[args.embedding_type + args.model_type] = result
-    logger.info(results)
+
+    logger.space()
+    logger.info("========= Final Results =========")
+    logger.info(f"model : {args.embedding_type + args.model_type}")
+    for k, v in result.items():
+        logger.info(f"{k}: {v}")
     logger.info("time : %s", timeee)
+    logger.info("=================================")

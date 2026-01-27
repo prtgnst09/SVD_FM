@@ -24,5 +24,5 @@ class embed_SparseSVD:
                                   alpha=1, batch_size=100)
         pca2.fit(x.T@x)
         v = pca2.components_
-        logger.info('pca ended')
+        logger.info("pca ended")
         return u.T, v.T

@@ -38,4 +38,11 @@ def set_logger(log_dir: str = './logs'):
         ch = logging.StreamHandler(sys.stdout)
         logger.addHandler(ch)
 
+    def space():
+        fh.setFormatter(logging.Formatter('%(message)s'))
+        logger.info("")
+        fh.setFormatter(fmt)
+    
+    logger.space = space
+    
     return logger
